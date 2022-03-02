@@ -14,7 +14,7 @@ The goal of this project is to build an interactive command-line interface to th
 
 To support nested transactions we use the stack data structure to generalize transaction elements where each transaction has its linked list as a local store. Committing transaction will append data to update the global store subsequently.
 
-This project code structure follows the [Clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) and [Domain Driven Design (DDD)](https://martinfowler.com/tags/domain%20driven%20design.html) approach which supports incoming providers or external services for scalability and enable specific service testing.
+This project code structure follows the [Clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) and Domain Driven approach which supports incoming providers or external services for scalability and enable specific service testing.
 
 ## Usage
 
@@ -40,7 +40,7 @@ make docker-run
 make docker-test
 ```
 
-### Commands and example usage
+### Commands and example usages
 
 The shell accepts the following commands
 
@@ -86,22 +86,24 @@ Commit and Rollback transaction
 ├── CHANGELOG.md
 ├── Makefile
 ├── README.md
-├── external
-│   └── redis
 ├── cmd
-│   └── 
 └── pkg
-    └── localmeory
+    └── store
+      └── domain
+      └── mocks
+      └── model
 ```
 
 A brief description of the layout:
 
 - `.gitignore` varies per project, but all projects need to ignore `bin` directory.
-- `CHANGELOG.md` contains auto-generated changelog information.
+- `CHANGELOG.md` contains changelog information.
 - `README.md` is a detailed description of the project.
-- `pkg` places most of functional and logic.
-- `test` holds all tests.
-- `external` for all external store implementation
+- `pkg` contains packages used in this program.
+- `store` places most of functional and logic for key-value store.
+- `domain` keeps repository interface that used in store.
+- `mocks` contain auto-generate mock file.
+- `model` define typed collections of fields and interface.
 
 ## Notes
 

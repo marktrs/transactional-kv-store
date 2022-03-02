@@ -1,0 +1,6 @@
+# macOS desktop service file
+.DS_Store
+
+# golang output binary directory
+bin
+coverage.out

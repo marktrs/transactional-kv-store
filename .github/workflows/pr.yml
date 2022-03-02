@@ -1,0 +1,103 @@
+name: "PullRequest"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    strategy:
+      matrix:
+        go-version: [1.17]
+    name: lint
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: actions/checkout@v2
+      - name: Install golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.42.1
+      - name: Run golangci-lint
+        run: $(go env GOPATH)/bin/golangci-lint run -v --out-format=checkstyle > golangci-lint-report.xml
+      - name: Archive lint results
+        uses: actions/upload-artifact@master
+        with:
+          name: golangci-lint-report
+          path: ${{github.workspace}}/golangci-lint-report.xml
+
+  security:
+    runs-on: ubuntu-18.04
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: "-no-fail -fmt sonarqube -out gosec-report.json ./..."
+      - name: Archive gosec results
+        uses: actions/upload-artifact@master
+        with:
+          name: gosec-report
+          path: ${{github.workspace}}/gosec-report.json
+
+  tests:
+    runs-on: ubuntu-18.04
+    needs: [lint]
+    strategy:
+      matrix:
+        type: [unit]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: ${{ matrix.type }} tests
+        run: make clean ${{ matrix.type }}-test
+
+  coverage:
+    runs-on: ubuntu-18.04
+    needs: [tests]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Coverage tests
+        run: make coverage
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@master
+        with:
+          name: code-coverage-report
+          path: ${{github.workspace}}/coverage.out
+  sonarqube-analysis:
+    runs-on: ubuntu-18.04
+    needs: [lint, coverage, security]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Download lint results
+        uses: actions/download-artifact@master
+        with:
+          name: golangci-lint-report
+          path: ${{github.workspace}}
+      - name: Download code coverage results
+        uses: actions/download-artifact@master
+        with:
+          name: code-coverage-report
+          path: ${{github.workspace}}
+      - name: Download gosec results
+        uses: actions/download-artifact@master
+        with:
+          name: gosec-report
+          path: ${{github.workspace}}
+      - name: Display structure of downloaded files
+        run: ls -R
