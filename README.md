@@ -1,4 +1,5 @@
 # Transactional Key Value Store
+![example workflow](https://github.com/marktrs/transactional-kv-store/actions/workflows/pr.yml/badge.svg?branch=main)
 
 - [About the project](#about-the-project)
   - [Design](#design)
